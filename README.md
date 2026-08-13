@@ -12,7 +12,7 @@
 - 哪些抽象被删除或推翻，当前设计如何从提交历史中长出来；
 - DeepSeek 如何让文档同时服务人类、Coding Agent 和 CI。
 
-最终长文发布在 [xdlkc.github.io](https://xdlkc.github.io/)。本仓库保留研究计划、模块草稿、证据表、覆盖率和可运行实验。
+最终长文发布在 [xdlkc.github.io/deepseek-harness/](https://xdlkc.github.io/deepseek-harness/)。本仓库保留研究计划、模块草稿、证据表、覆盖率和可运行实验。
 
 ## 证据规则
 
@@ -42,6 +42,10 @@ site-assets/  发布用静态资源的源文件或说明
 ```
 
 详见 [实验说明](experiment/README.md)。
+
+## 阅读覆盖与审查
+
+六个核心模块的公开分母合计 `32,766 / 32,766` 行。每份模块草稿都由另一位 Agent 做过对抗审查，最终总稿又独立复核一次。逐模块分母、排除范围和验证状态见 [`drafts/08-coverage.md`](drafts/08-coverage.md)。
 
 ## 更新策略
 
