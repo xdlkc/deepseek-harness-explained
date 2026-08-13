@@ -1,0 +1,87 @@
+<section class="dsh-explorer" data-dsh-explorer data-dsh-active-view="all" aria-labelledby="dsh-map-title">
+  <header class="dsh-explorer-head">
+    <div>
+      <h2 class="dsh-explorer-title" id="dsh-map-title">运行时剖面图</h2>
+      <p class="dsh-explorer-hint">切换观察平面，再点一个模块看它拥有的决定权。方向键可移动节点。</p>
+    </div>
+    <div class="dsh-view-switch" aria-label="架构观察平面">
+      <button type="button" data-dsh-view="all" aria-pressed="true">全部</button>
+      <button type="button" data-dsh-view="runtime" aria-pressed="false">运行时</button>
+      <button type="button" data-dsh-view="truth" aria-pressed="false">持久事实</button>
+    </div>
+  </header>
+
+  <div class="dsh-map-wrap">
+    <div class="dsh-map-stage" role="tablist" aria-label="六个核心系统">
+      <button class="dsh-map-node dsh-node--profile" type="button" role="tab" data-dsh-node="profile" data-dsh-layer="runtime" aria-controls="dsh-panel-profile">
+        <span class="dsh-node-kicker">assemble</span>
+        <span class="dsh-node-name">Profile / Bundle</span>
+        <span class="dsh-node-role">把多个产品入口装成一棵插件树</span>
+      </button>
+      <button class="dsh-map-node dsh-node--cordis" type="button" role="tab" data-dsh-node="cordis" data-dsh-layer="runtime" aria-controls="dsh-panel-cordis">
+        <span class="dsh-node-kicker">runtime core</span>
+        <span class="dsh-node-name">Cordis</span>
+        <span class="dsh-node-role">服务、事件、Fiber 与 effect 所有权</span>
+      </button>
+      <button class="dsh-map-node dsh-node--scope" type="button" role="tab" data-dsh-node="scope" data-dsh-layer="runtime" aria-controls="dsh-panel-scope">
+        <span class="dsh-node-kicker">visibility</span>
+        <span class="dsh-node-name">Agent Scope</span>
+        <span class="dsh-node-role">global → preset → agent 的局部视图</span>
+      </button>
+      <button class="dsh-map-node dsh-node--loop" type="button" role="tab" data-dsh-node="loop" data-dsh-layer="runtime truth" aria-controls="dsh-panel-loop">
+        <span class="dsh-node-kicker">orchestrate</span>
+        <span class="dsh-node-name">Agent Loop</span>
+        <span class="dsh-node-role">把当前能力与已经提交的事实连起来</span>
+      </button>
+      <button class="dsh-map-node dsh-node--capability" type="button" role="tab" data-dsh-node="capability" data-dsh-layer="runtime" aria-controls="dsh-panel-capability">
+        <span class="dsh-node-kicker">capability</span>
+        <span class="dsh-node-name">Tool / LLM</span>
+        <span class="dsh-node-role">稳定合同与可替换 Provider</span>
+      </button>
+      <button class="dsh-map-node dsh-node--session" type="button" role="tab" data-dsh-node="session" data-dsh-layer="truth" aria-controls="dsh-panel-session">
+        <span class="dsh-node-kicker">truth core</span>
+        <span class="dsh-node-name">Session Event Log</span>
+        <span class="dsh-node-role">模型上下文、恢复与投影的事实源</span>
+      </button>
+    </div>
+
+    <div class="dsh-evidence" aria-live="polite">
+      <article class="dsh-evidence-panel" id="dsh-panel-profile" role="tabpanel" data-dsh-panel="profile">
+        <span class="dsh-evidence-label">decision owner</span>
+        <h3>装什么，以及按什么顺序覆盖</h3>
+        <p>稳定 entry ID 让 Loader 区分更新与替换。Patch 更像按行装配，不是任意 YAML 深合并。</p>
+        <a class="dsh-evidence-link" href="#profile-bundle">读 Profile / Bundle →</a>
+      </article>
+      <article class="dsh-evidence-panel" id="dsh-panel-cordis" role="tabpanel" data-dsh-panel="cordis">
+        <span class="dsh-evidence-label">runtime core</span>
+        <h3>谁活着，依赖谁，跟谁一起销毁</h3>
+        <p>Context 解析 realm，Fiber 记录生命周期，effect 把监听器、服务和子插件交给同一 owner。</p>
+        <a class="dsh-evidence-link" href="#cordis-runtime">读 Cordis →</a>
+      </article>
+      <article class="dsh-evidence-panel" id="dsh-panel-scope" role="tabpanel" data-dsh-panel="scope">
+        <span class="dsh-evidence-label">visibility</span>
+        <h3>同一进程，为什么看见不同能力</h3>
+        <p>读取按 global → preset → agent 合并。Scope 同时携带可见性标签和 Fiber 清理责任，但不是安全沙箱。</p>
+        <a class="dsh-evidence-link" href="#agent-scope">读 Agent Scope →</a>
+      </article>
+      <article class="dsh-evidence-panel" id="dsh-panel-loop" role="tabpanel" data-dsh-panel="loop">
+        <span class="dsh-evidence-label">orchestrate</span>
+        <h3>策略很薄，提交权很重</h3>
+        <p>Loop 每步从日志派生上下文。工具 body 可以并发，结果仍按模型顺序写回事实流。</p>
+        <a class="dsh-evidence-link" href="#agent-loop">读 Agent Loop →</a>
+      </article>
+      <article class="dsh-evidence-panel" id="dsh-panel-capability" role="tabpanel" data-dsh-panel="capability">
+        <span class="dsh-evidence-label">capability</span>
+        <h3>合同稳定，Provider 保留差异</h3>
+        <p>Tool 与 LLM 都分 Definition、Provider、Consumer。两个异构实现共同验证 seam，不假装差异已经消失。</p>
+        <a class="dsh-evidence-link" href="#capabilities">读 Capability →</a>
+      </article>
+      <article class="dsh-evidence-panel" id="dsh-panel-session" role="tabpanel" data-dsh-panel="session">
+        <span class="dsh-evidence-label">truth core</span>
+        <h3>什么已经发生，以及怎样重新计算</h3>
+        <p>Append-only log 是权威；messages、transcript、request state 和 UI projection 都是可重建 read models。</p>
+        <a class="dsh-evidence-link" href="#session-log">读 Session Log →</a>
+      </article>
+    </div>
+  </div>
+</section>
