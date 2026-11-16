@@ -1,56 +1,72 @@
 # DeepSeek Harness Explained
 
-这是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的非官方中文深度拆解与证据库。
+English | [简体中文](./README.zh-CN.md)
 
-首版固定在 commit [`47f943859bef60e4160492346772ded9b24f765a`](https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a)，对应 `0.1.0-rc.5` developer preview。这里研究的是这一个快照，不把后续版本的行为悄悄写回首版结论。
+An unofficial architectural teardown and evidence repository for [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness).
 
-## 这里要回答什么
+- **Pinned snapshot**: commit [`47f943859bef60e4160492346772ded9b24f765a`](https://github.com/deepseek-ai/deepseek-harness/commit/47f943859bef60e4160492346772ded9b24f765a) (`0.1.0-rc.5` developer preview package version; upstream had no Git tags at snapshot time). Upstream changes after this commit are not silently backported into v1 conclusions.
+- **Full essay**: [xdlkc.github.io/deepseek-harness/](https://xdlkc.github.io/deepseek-harness/)
+- **Language note**: The full report ([`ANALYSIS_REPORT.md`](./ANALYSIS_REPORT.md)), module drafts (`drafts/`), and research records (`research/`) are written in **Simplified Chinese**. This README provides the English entry point and repository guide.
 
-- 这套 Harness 的架构从哪里来，Cordis 在里面到底做了什么；
-- 为什么真正的两根支柱是 Cordis 运行时与 Session Event Log；
-- Profile、Scope、Agent Loop、Tool 和 LLM 怎样连成一次完整执行；
-- 哪些抽象被删除或推翻，当前设计如何从提交历史中长出来；
-- DeepSeek 如何让文档同时服务人类、Coding Agent 和 CI。
+## Core Research Questions Answered
 
-最终长文发布在 [xdlkc.github.io/deepseek-harness/](https://xdlkc.github.io/deepseek-harness/)。本仓库保留研究计划、模块草稿、证据表、覆盖率和可运行实验。
+1. **Where the architecture comes from and what Cordis actually does**: Why `"Everything is a plugin"` still rests on a framework kernel (`Context` / realm isolation, `Fiber` / `effect` disposal ownership, compensatory reload transactions, and why Cordis was vendored in-repo).
+2. **Why there are two interlocking kernels**: How **Cordis Runtime** (mutable, hot-reloadable live instances) pairs with **Session Event Log** (append-only durable facts, `Surface` projection, `request/header` epochs, and Host single-point projections).
+3. **How execution wires together end-to-end**: How **Profile / Bundle** (entry ID assembly and patches), **Agent Scope** (`global → preset → agent` lookup and per-preset standing mounts), **Agent Loop** (thin policy, turn/step coordination, concurrent tool execution with deterministic model-order commit), and **Tool / LLM Capability** (Definition / Provider / Consumer boundaries validated by `llm-deepseek` and `llm-pi-ai`) connect for a single user input.
+4. **How the design evolved across 12,293 reachable commits (972 first-parent commits)**: Which abstractions were removed or reverted—deleting transient `agent/*` event mirrors, pulling client-side domain projection back to Host, and retiring generic `dsh-mode` in favor of Plan Mode.
+5. **How documentation operates as an engineering gate**: How `pnpm run doc-sync`, CI type-equivalence checks, generated catalogs, per-package `Model Experience`, and 541 active + 142 archived Agent Notes keep human, agent, and CI views aligned—and where semantic drift still slipped through.
 
-## 证据规则
+## Evidence Discipline & Coverage
 
-正文使用三种明确标记：
+Every claim in [`ANALYSIS_REPORT.md`](./ANALYSIS_REPORT.md) uses one of three explicit tiers:
 
-- **已证实**：源码、测试、提交说明、Agent Note 或官方文档直接支持；
-- **合理推断**：多份证据共同支持，但作者没有明说；
-- **仍然未知**：仓库材料不足，例如 TUI 被删除的完整产品原因。
+- **Verified (`已证实`)**: Directly backed by source code, tests, commit messages, Agent Notes, or official docs at the pinned commit.
+- **Reasonable Inference (`合理推断`)**: Supported by multiple independent artifacts without an explicit author statement.
+- **Still Unknown (`仍然未知`)**: Insufficient public evidence in the repo (for example, the full product rationale behind deleting the TUI).
 
-不使用 Star、代码量或提交数替代架构判断。提交历史能证明设计如何变化，不能替作者描述未写下来的心理活动。
+Selected core-module reading coverage totals **`32,766 / 32,766` lines** across six systems (`Cordis Runtime`, `Profile / Bundle`, `Agent Scope`, `Agent Loop`, `Session Event Log`, and `Tool / LLM Capability`), with independent adversarial review completed for all 6 module drafts and the final report. Per-module denominators and exclusions are documented in [`drafts/08-coverage.md`](./drafts/08-coverage.md).
 
-## 目录
+## Keyless Session Replay Experiment
 
-```text
-drafts/       研究计划、核心模块分析、交叉验证和覆盖率
-research/     演进时间线、文档体系、证据索引
-experiment/   无密钥 Session Log 重放实验
-site-assets/  发布用静态资源的源文件或说明
-```
+[`experiment/`](./experiment/README.md) reads the official `headless-profile` session snapshot directly and invokes `Session.create()`, `requestHeader()`, and `deriveMessages()` from the pinned DeepSeek Harness checkout—no `DEEPSEEK_API_KEY` required.
 
-## 无密钥实验
-
-[`experiment/`](experiment/) 直接读取官方仓库的 headless 快照，再调用固定源码中的 `Session.create()`、`requestHeader()` 和 `deriveMessages()`。它会显示 32 个持久事件如何投影成 5 条模型可见消息，并还原两次模型请求各自的历史。
+Place an official `deepseek-harness` checkout next to this repository and run:
 
 ```bash
+cd ../deepseek-harness
+pnpm install
+cd ../deepseek-harness-explained
 ./experiment/run.sh
 ```
 
-详见 [实验说明](experiment/README.md)。
+The replay demonstrates how `32` persisted seed events project into `5` model-visible Surface nodes across `2` `request/header` epochs. See [`experiment/README.md`](./experiment/README.md) for details and scope limits.
 
-## 阅读覆盖与审查
+## Repository Guide
 
-六个核心模块的公开分母合计 `32,766 / 32,766` 行。每份模块草稿都由另一位 Agent 做过对抗审查，最终总稿又独立复核一次。逐模块分母、排除范围和验证状态见 [`drafts/08-coverage.md`](drafts/08-coverage.md)。
+| Path | Contents (Chinese) |
+|---|---|
+| [`ANALYSIS_REPORT.md`](./ANALYSIS_REPORT.md) | Complete long-form architectural teardown and takeaways |
+| [`research/evolution-timeline.md`](./research/evolution-timeline.md) | Commit-backed design evolution evidence table and key reversals |
+| [`research/documentation-system.md`](./research/documentation-system.md) | Analysis of DeepSeek Harness documentation tiers, `doc-sync` gates, and Agent Notes |
+| [`drafts/03-plan.md`](./drafts/03-plan.md) | Initial research scope, line-count breakdown, and review rules |
+| [`drafts/03-research.md`](./drafts/03-research.md) | Repository survey and reading plan |
+| [`drafts/04-design-direction.md`](./drafts/04-design-direction.md) | Visual layout and information design notes for the published essay |
+| [`drafts/05-modules-plan.md`](./drafts/05-modules-plan.md) | Narrative structure linking the six core subsystems |
+| [`drafts/06-module-cordis.md`](./drafts/06-module-cordis.md) | Module deep-dive: Cordis Runtime & Loader |
+| [`drafts/06-module-profile-bundle.md`](./drafts/06-module-profile-bundle.md) | Module deep-dive: Profile & Bundle composition |
+| [`drafts/06-module-agent-scope.md`](./drafts/06-module-agent-scope.md) | Module deep-dive: Agent Scope & standing presets |
+| [`drafts/06-module-agent-loop.md`](./drafts/06-module-agent-loop.md) | Module deep-dive: Agent Loop & turn/step orchestration |
+| [`drafts/06-module-session-log.md`](./drafts/06-module-session-log.md) | Module deep-dive: Session Event Log, Surface, Persistence & Projection |
+| [`drafts/06-module-capabilities.md`](./drafts/06-module-capabilities.md) | Module deep-dive: Tool & LLM Capability seams |
+| [`drafts/07-cross-validation.md`](./drafts/07-cross-validation.md) | Cross-module conflict resolution and documentation drift findings |
+| [`drafts/08-coverage.md`](./drafts/08-coverage.md) | Reading denominators (`32,766 / 32,766`) and adversarial review status |
+| [`drafts/08-insights.md`](./drafts/08-insights.md) | Synthesized architectural, evolutionary, and product insights |
+| [`experiment/`](./experiment/README.md) | Runnable replay script ([`inspect-session-replay.ts`](./experiment/inspect-session-replay.ts), [`run.sh`](./experiment/run.sh)) |
+| [`site-assets/architecture-explorer.html`](./site-assets/architecture-explorer.html) | Interactive architecture diagram markup used in the published site |
+| [`CHANGELOG.md`](./CHANGELOG.md) | Snapshot and research changelog |
 
-## 更新策略
+## License & Disclaimer
 
-首版快照永久保留。上游变化单独记录“与首版相比发生了什么”，不会无提示地改写旧结论。若一个源码链接与当前 `master` 不同，请先核对 URL 中的固定 commit。
+Licensed under the [MIT License](./LICENSE).
 
-## 声明
-
-这是独立研究项目，与 DeepSeek 官方没有隶属关系。引用的代码、文档和提交历史来自原仓库；评论与推断由本项目作者负责。
+This is an independent research project unaffiliated with DeepSeek. All referenced source code, docs, and commit history belong to [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness); commentary and inferences are the responsibility of this repository's author.
